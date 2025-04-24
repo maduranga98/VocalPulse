@@ -129,34 +129,89 @@ export default function AttendanceClock() {
   const formatAttendanceTime = (timestamp) => {
     if (!timestamp) return "Not recorded";
 
-    const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+    try {
+      // Handle Firestore Timestamp objects
+      if (timestamp && typeof timestamp.toDate === "function") {
+        return timestamp.toDate().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+      }
 
-    return date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
+      // Handle Date objects or ISO strings
+      const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        console.error("Invalid date:", timestamp);
+        return "Invalid time format";
+      }
+
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+    } catch (error) {
+      console.error("Error formatting time:", error);
+      return "Time formatting error";
+    }
   };
 
   // Calculate worked hours
   const getWorkedHours = () => {
     if (!todayRecord || !todayRecord.clockInTime) return 0;
 
-    const clockInTime =
-      todayRecord.clockInTime instanceof Date
-        ? todayRecord.clockInTime
-        : new Date(todayRecord.clockInTime);
+    try {
+      let clockInTime;
+      let clockOutTime;
 
-    const clockOutTime = todayRecord.clockOutTime
-      ? todayRecord.clockOutTime instanceof Date
-        ? todayRecord.clockOutTime
-        : new Date(todayRecord.clockOutTime)
-      : new Date();
+      // Handle Firestore Timestamp objects
+      if (
+        todayRecord.clockInTime &&
+        typeof todayRecord.clockInTime.toDate === "function"
+      ) {
+        clockInTime = todayRecord.clockInTime.toDate();
+      } else {
+        clockInTime =
+          todayRecord.clockInTime instanceof Date
+            ? todayRecord.clockInTime
+            : new Date(todayRecord.clockInTime);
+      }
 
-    const diffMs = clockOutTime - clockInTime;
-    const diffHrs = diffMs / (1000 * 60 * 60);
+      if (todayRecord.clockOutTime) {
+        if (typeof todayRecord.clockOutTime.toDate === "function") {
+          clockOutTime = todayRecord.clockOutTime.toDate();
+        } else {
+          clockOutTime =
+            todayRecord.clockOutTime instanceof Date
+              ? todayRecord.clockOutTime
+              : new Date(todayRecord.clockOutTime);
+        }
+      } else {
+        clockOutTime = new Date();
+      }
 
-    return diffHrs.toFixed(2);
+      // Validate dates
+      if (isNaN(clockInTime.getTime()) || isNaN(clockOutTime.getTime())) {
+        console.error("Invalid date in calculation:", {
+          clockInTime,
+          clockOutTime,
+          originalClockIn: todayRecord.clockInTime,
+          originalClockOut: todayRecord.clockOutTime,
+        });
+        return "0.00";
+      }
+
+      const diffMs = clockOutTime - clockInTime;
+      const diffHrs = diffMs / (1000 * 60 * 60);
+
+      return Math.max(0, diffHrs).toFixed(2);
+    } catch (error) {
+      console.error("Error calculating hours:", error);
+      return "0.00";
+    }
   };
 
   return (

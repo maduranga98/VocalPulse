@@ -1,13 +1,18 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
+import { useAttendance } from "@/app/context/AttendanceContext";
 import NavBar from "@/app/components/layout/NavBar";
+import TeamAttendance from "@/app/components/attendance/TeamAttendance";
+import LeaveApprovals from "@/app/components/attendance/LeaveApprovals";
 
 export default function AdminAttendancePage() {
   const { user, loading: authLoading } = useAuth();
+  const { fetchTeamAttendance } = useAttendance();
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState("team");
 
   // Redirect if not admin
   useEffect(() => {
@@ -18,6 +23,13 @@ export default function AdminAttendancePage() {
       router.push("/dashboard");
     }
   }, [user, authLoading, router]);
+
+  // Fetch team attendance data when the page loads
+  useEffect(() => {
+    if (user && (user.role === "admin" || user.role === "supervisor")) {
+      fetchTeamAttendance();
+    }
+  }, [user, fetchTeamAttendance]);
 
   if (authLoading) {
     return (
@@ -37,78 +49,39 @@ export default function AdminAttendancePage() {
       <main className="container mx-auto px-4 py-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Attendance Administration</h1>
-          <p className="text-gray-600">Manage team attendance</p>
+          <p className="text-gray-600">
+            Manage team attendance and leave requests
+          </p>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4">Team Attendance</h2>
-
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Employee
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Clock In
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Clock Out
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        John Doe
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                        Present
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      9:00 AM
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      —
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        Jane Smith
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                        Absent
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      —
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      —
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="text-center text-sm text-gray-500 mt-6">
-            <p>This is a placeholder for the admin attendance panel.</p>
-            <p>The full implementation is coming soon!</p>
+        {/* Tab navigation */}
+        <div className="mb-6 border-b">
+          <div className="flex space-x-4">
+            <button
+              onClick={() => setActiveTab("team")}
+              className={`py-2 px-4 font-medium ${
+                activeTab === "team"
+                  ? "border-b-2 border-blue-500 text-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Team Attendance
+            </button>
+            <button
+              onClick={() => setActiveTab("leave")}
+              className={`py-2 px-4 font-medium ${
+                activeTab === "leave"
+                  ? "border-b-2 border-blue-500 text-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Leave Approvals
+            </button>
           </div>
         </div>
+
+        {/* Content based on active tab */}
+        {activeTab === "team" ? <TeamAttendance /> : <LeaveApprovals />}
       </main>
     </div>
   );
