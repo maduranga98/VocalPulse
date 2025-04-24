@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/app/context/AuthContext";
+import { AttendanceProvider } from "@/app/context/AttendanceContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,7 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "Call Center Management",
-  description: "Call center management application with Kanban board",
+  description:
+    "Call center management application with Kanban board and attendance tracking",
 };
 
 export default function RootLayout({ children }) {
@@ -23,7 +25,9 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <AttendanceProvider>{children}</AttendanceProvider>
+        </AuthProvider>
       </body>
     </html>
   );
