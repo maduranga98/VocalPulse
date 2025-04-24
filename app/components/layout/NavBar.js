@@ -38,6 +38,13 @@ export default function NavBar() {
               </Link>
 
               <Link
+                href="/performance"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-900 hover:bg-gray-100"
+              >
+                Performance
+              </Link>
+
+              <Link
                 href="/attendance"
                 className="px-3 py-2 rounded-md text-sm font-medium text-gray-900 hover:bg-gray-100"
               >
@@ -154,6 +161,14 @@ export default function NavBar() {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Dashboard
+            </Link>
+
+            <Link
+              href="/performance"
+              className="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-100"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Performance
             </Link>
 
             <Link
